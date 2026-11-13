@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shoot Sangeet | Reel Song Finder</title>
+<style>
+:root{--bg:#090c12;--panel:#151c28;--panel2:#1c2635;--line:#303c4e;--txt:#f6f7fb;--muted:#b2bdcc;--gold:#f3c96b;--blue:#8fc8ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:linear-gradient(125deg,#28202b,#172538);border-bottom:1px solid var(--line);padding:25px 17px}
+.wrap{max-width:1080px;margin:auto}h1{font-size:30px;margin:0}header p{margin:5px 0 0;color:#d0d7e2}
+main{max-width:1080px;margin:auto;padding:18px}.lead{color:var(--muted);margin:0 0 16px}
+h2{font-size:21px;margin:22px 0 9px}.hint{font-size:13px;color:var(--muted);margin:-4px 0 12px}
+input,select,textarea,button{font:inherit;color:var(--txt);background:#101722;border:1px solid var(--line);border-radius:11px;padding:11px}
+.toolbar{display:grid;grid-template-columns:1fr 190px;gap:9px}.toolbar input{width:100%}
+.category-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:9px;margin:13px 0}
+.cat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:left;cursor:pointer}.cat b{display:block}.cat small{color:var(--muted)}.cat.active{border-color:var(--gold);background:#2b281e}
+.subs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px}.sub{border-radius:30px;padding:8px 13px;background:var(--panel2);font-size:13px;cursor:pointer}.sub.active{background:var(--gold);color:#17130a;border-color:var(--gold)}
+.songgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:12px}
+.song{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:14px}.song h3{font-size:18px;margin:0}.song .kind{color:var(--gold);font-size:12px;font-weight:650}.song p{margin:7px 0;color:#d3dbe6;font-size:14px}.muted{color:var(--muted);font-size:13px}
+.actions{display:flex;gap:7px;flex-wrap:wrap}.actions a,.actions button{font-size:13px;padding:8px 10px;text-decoration:none;border-radius:9px}.actions a{color:var(--blue);border:1px solid var(--line)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:22px}
+label{display:block;color:var(--muted);font-size:13px;margin:10px 0 5px}input,textarea{width:100%}textarea{min-height:120px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.primary{background:var(--gold);color:#19150b;border:0;font-weight:700}.empty{padding:20px;text-align:center;color:var(--muted)}
+@media(max-width:560px){.toolbar,.two{grid-template-columns:1fr}h1{font-size:26px}}
+</style></head><body>
+<header><div class="wrap"><h1>🎬 Shoot Sangeet</h1><p>हर तरह की Reel के लिए गाने — Entry, Wedding, Attitude, Emotional, Business और बहुत कुछ।</p></div></header>
+<main>
+<p class="lead">पहले Reel की category चुनो, फिर उसका exact scene चुनो। उसी scene के लिए song suggestions दिखेंगे।</p>
+<div class="toolbar"><input id="search" placeholder="गाना / singer / mood खोजें…"><select id="sort"><option value="recommended">Recommended order</option><option value="az">Song name A–Z</option></select></div>
+<h2>1. Reel Category चुनो</h2><p class="hint">नीचे किसी category पर tap करो।</p><div id="categories" class="category-grid"></div>
+<h2>2. Scene / Song Type चुनो</h2><p class="hint">जैसे Entry, Bride Entry, Groom Entry, Dance या Emotional.</p><div id="subcategories" class="subs"></div>
+<h2 id="resultsTitle">Song Suggestions</h2><p id="resultsHint" class="hint">हर गाने के साथ उसका mood और किस shot में use करना है, दिया है।</p>
+<div id="songs" class="songgrid"></div>
+<section class="panel"><h2>⭐ Favourite Songs</h2><div id="favourites" class="muted">अभी कोई favourite नहीं चुना।</div></section>
+<section class="panel"><h2>📝 Pre-shoot Cue Sheet</h2>
+<div class="two"><div><label>Client / Company</label><input id="client" placeholder="Client का नाम"></div><div><label>Reel Type</label><input id="reeltype" placeholder="जैसे Groom Entry"></div></div>
+<label>Selected Song</label><input id="chosen" placeholder="गाने का नाम">
+<label>Shot list / Script</label><textarea id="plan" placeholder="1. Opening wide shot&#10;2. Close-up details&#10;3. Main entry / action&#10;4. Beat पर transition&#10;5. Ending shot"></textarea>
+<div class="actions"><button class="primary" id="copy">Cue Sheet Copy</button><button id="clear">Clear</button></div><p id="msg" class="muted">प्लान लिखो और शूट पर जाने से पहले copy कर लो।</p>
+</section>
+<p class="muted">Note: यह curated starter list है, दुनिया के सभी गाने नहीं। YouTube पर गाना खोजने का link खुलता है; website में audio या lyrics नहीं रखे गए हैं।</p>
+</main>
+<script>
+const data=[
+["Bhaukal Entry","Power / Bhaukal Entry","Toofan","Anirudh Ravichander","Mass · Powerful · Build-up","Hero reveal, low-angle walk, dramatic entry"],
+["Bhaukal Entry","Power / Bhaukal Entry","Hukum","Anirudh Ravichander","Mass · Royal · Heavy beat","Slow walk-in, group reveal, beat-hit cut"],
+["Bhaukal Entry","Power / Bhaukal Entry","Sultan Title Track","Sukhwinder Singh, Shadab Faridi","Powerful · Motivational","Strong entry, wide shot, confident close-up"],
+["Bhaukal Entry","Power / Bhaukal Entry","Malhari","Vishal Dadlani","Warrior · Celebration · High energy","Grand entry, energetic steps, fast cuts"],
+["Bhaukal Entry","Villain / Dark Entry","Aarambh Hai Prachand","Piyush Mishra","Dark · Intense · Epic","Silhouette reveal, slow push-in, dramatic turn"],
+["Bhaukal Entry","Villain / Dark Entry","KGF Theme","Ravi Basrur","Dark · Heavy · Cinematic","Shadow reveal, close-up details, beat sync"],
+["Bhaukal Entry","Villain / Dark Entry","Salaar Theme","Ravi Basrur","Intense · Heavy · Mass","Wide reveal, slow-motion walk, dramatic cut"],
+["Bhaukal Entry","Royal / King Entry","Jhoome Jo Pathaan","Arijit Singh, Sukriti Kakar","Stylish · Grand · Confident","Royal walk, outfit detail, entry reveal"],
+["Bhaukal Entry","Royal / King Entry","Born To Shine","Diljit Dosanjh","Royal · Confident · Punjabi","Outfit reveal, sunglasses shot, confident walk"],
+["Bhaukal Entry","Punjabi Swag Entry","Winning Speech","Karan Aujla","Swag · Hype · Beat-heavy","Beat drop entry, slow walk, close-up"],
+["Bhaukal Entry","Punjabi Swag Entry","52 Bars","Karan Aujla","Bold · Hype · Attitude","Hero pose, group entry, beat cuts"],
+["Bhaukal Entry","Punjabi Swag Entry","We Rollin","Shubh","Swag · Heavy beat","Crew walk, vehicle reveal, synced cuts"],
+["Bhaukal Entry","Punjabi Swag Entry","Still Rollin","Shubh","Confident · Hype","Slow walk, turn to camera, beat sync"],
+["Bhaukal Entry","Punjabi Swag Entry","Cheques","Shubh","Stylish · Bass · Swag","Entry walk, outfit and accessory details"],
+["Bhaukal Entry","Dhol / Celebration Entry","Aaja Nachle","Madhuri Dixit","Celebration · Dance","Group entry, dhol moments, crowd reactions"],
+["Bhaukal Entry","Dhol / Celebration Entry","Nagada Sang Dhol","Shreya Ghoshal, Osman Mir","Grand · Festive · High energy","Wedding baraat entry and celebration"],
+["Bhaukal Entry","Dhol / Celebration Entry","Tattad Tattad","Aditya Narayan","Energetic · Dance · Grand","Dance entry, fast cuts, group reveal"],
+
+["Wedding","Bride Entry","Din Shagna Da","Jasleen Royal","Graceful · Emotional","Bride walking entry, slow-motion veil/detail shots"],
+["Wedding","Bride Entry","Madhanya","Rahul Vaidya, Asees Kaur","Emotional · Traditional","Bride entry and family reactions"],
+["Wedding","Groom Entry","Azeem-O-Shaan Shahenshah","Mohammed Rafi","Royal · Grand","Groom solo entry, wide reveal"],
+["Wedding","Groom Entry","Malhari","Vishal Dadlani","Powerful · Celebration","Groom dance entry, energetic cuts"],
+["Wedding","Couple Entry","Kesariya","Arijit Singh","Romantic · Grand","Couple walking together, wide shot"],
+["Wedding","Couple Entry","Tere Vaaste","Varun Jain, Sachin-Jigar","Happy · Romantic","Couple entry and candid smiles"],
+["Wedding","Couple Moments","Ranjha","B Praak, Jasleen Royal","Emotional · Romantic","Couple close-ups and story moments"],
+["Wedding","Haldi / Mehndi","Gallan Goodiyaan","Shankar-Ehsaan-Loy","Fun · Celebration","Family dance, haldi fun and candid moments"],
+["Wedding","Dance / Sangeet","London Thumakda","Labh Janjua, Sonu Kakkar, Neha Kakkar","Upbeat · Dance","Group dance, quick beat cuts"],
+["Wedding","Farewell","Madhanya","Rahul Vaidya, Asees Kaur","Emotional · Slow","Family farewell and candid reactions"],
+["Wedding","Wedding Highlights","Heeriye","Jasleen Royal, Arijit Singh","Soft · Romantic","Decor, details, couple and family montage"],
+["Attitude","Hero Entry","Winning Speech","Karan Aujla","Swag · Powerful","Low-angle walk-in, reveal on beat"],
+["Attitude","Hero Entry","Still Rollin","Shubh","Hype · Confident","Slow walk, turn and close-up"],
+["Attitude","Swag / Lifestyle","Softly","Karan Aujla","Cool · Stylish","Outfit, sunglasses and lifestyle shots"],
+["Attitude","Swag / Lifestyle","52 Bars","Karan Aujla","Bold · Hype","Beat cuts, confident poses"],
+["Attitude","Royal Entry","Born To Shine","Diljit Dosanjh","Grand · Confident","Wide entry, outfit details"],
+["Attitude","Friends Entry","We Rollin","Shubh","Energetic · Crew","Group walk and synced transitions"],
+["Emotional","Sad / Heartbreak","Channa Mereya","Arijit Singh","Heartbreak · Emotional","Solo walk, distant look, memory montage"],
+["Emotional","Sad / Heartbreak","Agar Tum Saath Ho","Alka Yagnik, Arijit Singh","Deep · Melancholic","Slow close-ups and story edit"],
+["Emotional","Alone / Lonely","Tune Jo Na Kaha","Mohit Chauhan","Nostalgic · Lonely","Window, rain and walking shots"],
+["Emotional","Emotional Story","Phir Bhi Tumko Chaahunga","Arijit Singh","Intense · Romantic","Storytelling and slow transitions"],
+["Cinematic","Cinematic Intro","Husn","Anuv Jain","Dreamy · Moody","Opening portrait, lens movement, detail shots"],
+["Cinematic","Slow Motion","Apna Bana Le","Arijit Singh","Warm · Soft","Slow motion portraits and scenic shots"],
+["Cinematic","Dramatic Reveal","Aarambh Hai Prachand","Piyush Mishra","Epic · Powerful","Build-up then reveal on beat"],
+["Cinematic","Travel Film Look","Ilahi","Arijit Singh","Uplifting · Free","Wide landscape, walking and movement"],
+["Bike / Car","Bike Entry","No Love","Shubh","Moody · Attitude","Rider reveal, bike detail and walk-up"],
+["Bike / Car","Car Entry","Winning Speech","Karan Aujla","Swag · Strong beat","Car reveal, door detail, owner entry"],
+["Bike / Car","Rolling / Driving","Elevated","Shubh","Hype · Driving","Safe stationary details and road-side visuals"],
+["Bike / Car","Vehicle Showcase","Insane","AP Dhillon","Cool · Beat","Headlight, wheel, logo and body details"],
+["Machine / Business","Machine Entry / Reveal","Zinda","Siddharth Mahadevan","Motivational · High energy","Wide machine reveal, details, working sequence"],
+["Machine / Business","Factory / Work Process","Kar Har Maidaan Fateh","Sukhwinder Singh, Shreya Ghoshal","Inspirational · Epic","Workers, process and finished product"],
+["Machine / Business","Product Reveal","The Last Ride","Sidhu Moose Wala","Moody · Cinematic","Slow product reveal and close-up details"],
+["Machine / Business","Company Promo","Lakshya Title Track","Shankar Mahadevan","Motivational · Uplifting","Company name, team and work montage"],
+["Travel","Road Trip","Safarnama","Lucky Ali","Peaceful · Travel","Road, journey and landscape"],
+["Travel","Nature / Scenic","Khaabon Ke Parinday","Alyssa Mendonsa, Mohit Chauhan","Free · Uplifting","Mountains, sky and wide frames"],
+["Travel","Travel Reel","Phir Se Ud Chala","Mohit Chauhan","Dreamy · Calm","Walking, view reveal and transitions"],
+["Birthday / Celebration","Birthday Entry","Aaj Ki Party","Mika Singh","Party · Upbeat","Birthday person entry and group reaction"],
+["Birthday / Celebration","Cake / Celebration","Gallan Goodiyaan","Shankar-Ehsaan-Loy","Happy · Celebration","Cake cut, claps and group moments"],
+["Devotional","Bhakti / Temple","Ram Siya Ram","Sachet Tandon","Peaceful · Devotional","Temple, diya and devotional visuals"],
+["Devotional","Shiv Bhakti","Har Har Shambhu","Abhilipsa Panda, Jeetu Sharma","Energetic · Bhakti","Shiv-themed visuals and beat transitions"],
+["Devotional","Krishna Bhakti","Shri Krishna Govind Hare Murari","Jubin Nautiyal","Calm · Devotional","Krishna visuals and peaceful montage"]
+];
+
+const expandedSongBank = {
+"Bhaukal Entry": [
+"Jai Jai Shivshankar","Singham Theme","Dangal Title Track","Brothers Anthem","Kar Har Maidaan Fateh","Zinda Banda","Jawan Title Track","Not Ramaiya Vastavaiya","Challa (Main Lad Jaana)","Aala Re Aala","Deva Shree Ganesha","Shiv Tandav Stotram","Shankara Re Shankara","Bajirao Mastani Theme","Tattad Tattad","Ram Chahe Leela","Khalibali","Ghoomar","Jai Ho","Sadda Haq","Bhaag DK Bose","Sultan Title Track","Chak De India","Lakshya Title Track","Rang De Basanti","Aarambh Hai Prachand","KGF Theme Music","Garuda Gamana Vrishabha Vahana Theme","Vikram Title Track","Rolex Theme","Once Upon a Time (Vikram)","Master the Blaster","Vaathi Coming","Arabic Kuthu","Hukum","Jailer Theme","Kaavaalaa","Badass (Leo)","Naa Ready","Bloody Sweet","Lokiverse Theme","Anirudh BGM Mix","Salaar Theme","Sooreede","Prathi Gaadhalo","Dheera Dheera","Toofan","Sultan (Tamil)","Pushpa Pushpa","Daavudi","Kurchi Madathapetti"
+],
+"Wedding": [
+"Din Shagna Da","Madhanya","Ranjha","Kesariya","Heeriye","Tere Vaaste","Sajni","Gallan Goodiyaan","London Thumakda","Nachde Ne Saare","Cutiepie","Morni Banke","Laung Da Lashkara","Sauda Khara Khara","Ainvayi Ainvayi","Banno","Navrai Majhi","Mehndi Hai Rachnewali","Mehndi Laga Ke Rakhna","Maahi Ve","Mere Haathon Mein","Dilli Wali Girlfriend","Drama Queen","Punjabi Wedding Song","Gallan Kardi","Coka 2.0","The Punjaabban Song","Bijlee Bijlee","Proper Patola","High Rated Gabru","Lover","Pasoori","Mast Magan","Bolna","Janam Janam","Hawayein","Raataan Lambiyan","Shayad","Tera Ban Jaunga","Tum Se Hi","Pehla Nasha","Aaj Sajeya","Ve Maahi","Teri Ore","Din Shagna Da (Instrumental)","Bole Chudiyan","You Are My Soniya","Say Shava Shava","Aaj Ki Raat","What Jhumka?","Aaj Ki Raat (Stree 2)"
+],
+"Attitude": [
+"Winning Speech","Softly","52 Bars","Still Rollin","We Rollin","Cheques","On Top","Born To Shine","Insane","Brown Munde","Excuses","No Love","Elevated","GOAT","295","The Last Ride","So High","Same Beef","Daku","8 Parche","Levels","Baller","Admirin' You","Take It Easy","Players","Gangsta","Don't Look","Desires","With You","One Love","King Shit","For A Reason","Wavy","Tauba Tauba","Millionaire","Big Dawgs","Bandana","Jatt Da Muqabala","Old Skool","Badnam","Naah","Kya Baat Ay","Backbone","High Rated Gabru","Lahore","3 Peg","Suit Suit","Amplifier","Brown Rang","Angreji Beat"
+],
+"Emotional": [
+"Channa Mereya","Agar Tum Saath Ho","Tune Jo Na Kaha","Phir Bhi Tumko Chaahunga","Hamari Adhuri Kahani","Bekhayali","Kaise Hua","O Bedardeya","Tadap Tadap","Sach Keh Raha Hai Deewana","Kal Ho Naa Ho","Tujhe Bhula Diya","Bhula Dena","Mann Bharrya","Koi Fariyaad","Judaai","Alvida","Aadat","Woh Lamhe","Dooriyan","Main Dhoondne Ko Zamaane Mein","Lo Maan Liya","Thodi Jagah","Tera Yaar Hoon Main","Yaariyan","Aye Khuda","Phir Mohabbat","Tujhe Kitna Chahne Lage","Pachtaoge","Filhall","Filhall 2 Mohabbat","Roke Na Ruke Naina","Naina","Saware","Jeene Bhi De","Maa","Luka Chuppi","Lambi Judaai","Aankh Hai Bhari Bhari","Abhi Mujh Mein Kahin","Tere Bin","Tose Naina","Kaun Tujhe","Hasi","Hasi Ban Gaye","Baarish","Baarishein","Riha","Gul","Husn"
+],
+"Cinematic": [
+"Husn","Apna Bana Le","Satranga","Kho Gaye Hum Kahan","Ilahi","Aaj Ki Raat","Aabaad Barbaad","Shayad","Phir Se Ud Chala","Kun Faya Kun","Agar Tum Saath Ho","Iktara","Shaam","Yeh Tumhari Meri Baatein","Aahista","Ishq Bulaava","Hawayein","Qaafirana","Raatan Lambiyan","Ve Kamleya","O Maahi","Tere Hawaale","Chaleya","Pehle Bhi Main","Arjan Vailly","Animal Theme","Brahmastra Theme","Kesariya Dance Mix","Jashn-E-Bahaaraa","Azeem-O-Shaan Shahenshah","Deewani Mastani","Malang Title Track","Bulleya","Channa Mereya","Aayat","Laal Ishq","Tere Naina","Zaalima","Gerua","Sooraj Dooba Hain","Phir Le Aya Dil","Ami Je Tomar","Vikram Vedha Theme","Interstellar Theme","Time (Inception)","Experience (Ludovico Einaudi)","Arrival of the Birds","Cornfield Chase","Mountains (Interstellar)","Your Name Theme","Merry-Go-Round"
+],
+"Bike / Car": [
+"No Love","Elevated","Winning Speech","Insane","Brown Munde","We Rollin","Still Rollin","Born To Shine","On Top","52 Bars","Cheques","GOAT","295","The Last Ride","So High","Daku","Baller","Levels","Players","Gangsta","Amplifier","Brown Rang","Lahore","3 Peg","Naah","Suit Suit","High Rated Gabru","Backbone","Old Skool","Same Beef","Jatt Da Muqabala","Desi Kalakaar","Love The Way You Lie","Tokyo Drift","See You Again","Immortals","Believer","Thunder","Enemy","Bones","Centuries","The Nights","Animals","Turn Down for What","Tremor","Spectre","Faded","Alone","On My Way","Legends Never Die","Invincible"
+],
+"Machine / Business": [
+"Zinda","Kar Har Maidaan Fateh","Lakshya Title Track","Sultan Title Track","Brothers Anthem","Chak De India","Aashayein","Ruk Jaana Nahin","Ziddi Dil","Besabriyaan","Parwah Nahi","Dangal Title Track","Dhaakad","Apna Time Aayega","Sher Aaya Sher","Sadda Haq","Ilahi","Sooraj Dooba Hain","Jai Ho","Aarambh Hai Prachand","Hall of Fame","The Nights","Whatever It Takes","Believer","Thunder","Unstoppable","The Champion","Remember the Name","Legends Are Made","Invincible","Centuries","Till I Collapse","Lose Yourself","Eye of the Tiger","We Will Rock You","Hall of Fame (Instrumental)","Time (Inception)","Cornfield Chase","Heart of Courage","Protectors of the Earth","Victory","Strength of a Thousand Men","Empire of Angels","The Last Samurai Theme","Top Gun Anthem","Mission Impossible Theme","Pirates of the Caribbean Theme","Interstellar Theme","Rocky Theme","Conquest of Paradise"
+],
+"Travel": [
+"Safarnama","Ilahi","Khaabon Ke Parinday","Phir Se Ud Chala","Yun Hi Chala Chal","Patakha Guddi","Dil Chahta Hai","Aao Milo Chalo","Journey Song","Sooraj Ki Baahon Mein","Love You Zindagi","Zinda","Rubaru","Hairat","Khwabon Ke Parindey","Subhanallah","Matargashti","Phir Se Ud Chala","Iktara","Shaam","Alag Aasmaan","Kasoor","Gul","Baarishein","Kho Gaye Hum Kahan","Husn","Monta Re","Banjara","Aazaadiyan","Nadaan Parindey","Kyon","Aaj Kal Zindagi","Dil Dhadakne Do","Senorita","Der Lagi Lekin","Yeh Ishq Hai","Tanha Dil","Musafir Hoon Yaaron","Zindagi Ek Safar Hai Suhana","Aaj Main Upar","Uff Teri Adaa","The Nights","On My Way","Paradise","A Sky Full of Stars","Adventure of a Lifetime","Walking on a Dream","Mountain Sound","Send Me On My Way","Good Life"
+],
+"Birthday / Celebration": [
+"Aaj Ki Party","Gallan Goodiyaan","London Thumakda","Kar Gayi Chull","Abhi Toh Party Shuru Hui Hai","Let's Nacho","Kala Chashma","The Disco Song","Badtameez Dil","Dilli Wali Girlfriend","Saturday Saturday","High Heels","Party All Night","Daaru Desi","Desi Boyz","Ainvayi Ainvayi","Cutiepie","Nachde Ne Saare","Morni Banke","Coca Cola","Bom Diggy Diggy","Lamberghini","Naah","Proper Patola","Sauda Khara Khara","Dil Chori","Chogada","Kamariya","Ullu Ka Pattha","Sweety Tera Drama","Aankh Marey","Mungda","Muqabla","Garmi","What Jhumka?","Show Me The Thumka","Current Laga Re","Jhoome Jo Pathaan","Tauba Tauba","Bijlee Bijlee","Lover","3 Peg","Amplifier","Brown Rang","Tunak Tunak Tun","Mauja Hi Mauja","Sadi Gali","Nagada Nagada","Desi Girl","It's the Time to Disco"
+],
+"Devotional": [
+"Ram Siya Ram","Shri Krishna Govind Hare Murari","Achyutam Keshavam","Mere Ghar Ram Aaye Hain","Har Har Shambhu","Hanuman Chalisa","Shree Hanuman Chalisa (Hariharan)","Jai Hanuman Gyan Gun Sagar","Sukh Karta Dukh Harta","Deva Shree Ganesha","Mourya Re","Shendur Lal Chadhayo","Jai Ganesh Deva","Ganpati Bappa Morya","Shiv Tandav Stotram","Namo Namo","Shankara Re Shankara","Bam Bam Bhole","Har Har Mahadev","Karpur Gauram","Om Namah Shivaya","Shivoham","Rudrashtakam","Aigiri Nandini","Jai Ambe Gauri","Ambe Tu Hai Jagdambe Kali","Durga Chalisa","Jai Mata Di","Maa Sherawaliye","O Palanhare","Aarti Kunj Bihari Ki","Radhe Radhe","Radha Ramanam Hare Hare","Madhurashtakam","Govind Bolo Hari Gopal Bolo","Achyutam Keshavam Krishna Damodaram","Hare Krishna Hare Rama","Mere Banke Bihari Lal","Vrindavan Jaungi","Shyam Teri Bansi","Are Dwarpalo Kanhaiya Se Keh Do","Bolo Radha Radha","Raghupati Raghav Raja Ram","Vaishnav Jan To","Payoji Maine Ram Ratan Dhan Payo","Ram Aayenge","Jai Shri Ram","Sita Ram","Mangal Bhavan Amangal Hari","Raghunandan Raghav Ram"
+]
+};
+
+Object.entries(expandedSongBank).forEach(([folder, titles]) => {
+  const existing = new Set(data.filter(row => row[0] === folder).map(row => row[2].toLowerCase()));
+  const counts = {};
+  titles.forEach((title, i) => {
+    if (existing.has(title.toLowerCase())) return;
+    const sub = folder === "Bhaukal Entry"
+      ? ["Power / Bhaukal Entry","Villain / Dark Entry","Royal / King Entry","Punjabi Swag Entry","Dhol / Celebration Entry"][i % 5]
+      : folder === "Wedding"
+      ? ["Bride Entry","Groom Entry","Couple Entry","Haldi / Mehndi","Dance / Sangeet","Wedding Highlights"][i % 6]
+      : folder === "Attitude"
+      ? ["Hero Entry","Swag / Lifestyle","Royal Entry","Friends Entry"][i % 4]
+      : folder === "Emotional"
+      ? ["Sad / Heartbreak","Alone / Lonely","Emotional Story"][i % 3]
+      : folder === "Cinematic"
+      ? ["Cinematic Intro","Slow Motion","Dramatic Reveal","Travel Film Look"][i % 4]
+      : folder === "Bike / Car"
+      ? ["Bike Entry","Car Entry","Rolling / Driving","Vehicle Showcase"][i % 4]
+      : folder === "Machine / Business"
+      ? ["Machine Entry / Reveal","Factory / Work Process","Product Reveal","Company Promo"][i % 4]
+      : folder === "Travel"
+      ? ["Road Trip","Nature / Scenic","Travel Reel"][i % 3]
+      : folder === "Birthday / Celebration"
+      ? ["Birthday Entry","Cake / Celebration","Dance / Party"][i % 3]
+      : ["Bhakti / Temple","Shiv Bhakti","Krishna Bhakti","Aarti / Festival"][i % 4];
+    const mood = folder === "Bhaukal Entry" ? "Mass · Powerful · Entry"
+      : folder === "Wedding" ? "Wedding · Celebration · Romantic"
+      : folder === "Attitude" ? "Swag · Confident · Beat"
+      : folder === "Emotional" ? "Emotional · Slow · Story"
+      : folder === "Cinematic" ? "Cinematic · Moody · Dramatic"
+      : folder === "Bike / Car" ? "Hype · Driving · Swag"
+      : folder === "Machine / Business" ? "Motivational · Powerful · Promo"
+      : folder === "Travel" ? "Travel · Feel-good · Scenic"
+      : folder === "Birthday / Celebration" ? "Happy · Party · Celebration"
+      : "Devotional · Peaceful · Bhakti";
+    const use = `Best for ${sub.toLowerCase()} reel; check the track's beat and choose matching shots`;
+    data.push([folder, sub, title, "Search artist/version on YouTube", mood, use]);
+  });
+});
+const icons={"Bhaukal Entry":"🔥","Wedding":"💍","Attitude":"😎","Emotional":"🥀","Cinematic":"🎥","Bike / Car":"🏍️","Machine / Business":"⚙️","Travel":"🌄","Birthday / Celebration":"🎂","Devotional":"🙏"};
+let category="All",sub="All",favs=JSON.parse(localStorage.getItem("ss-favs-v2")||"[]");
+const categories=document.getElementById("categories"),subs=document.getElementById("subcategories");
+function buildCats(){categories.innerHTML="";["All",...Object.keys(icons)].forEach(c=>{let b=document.createElement("button");b.className="cat"+(category===c?" active":"");b.innerHTML=`<b>${c==="All"?"🎵":icons[c]} ${c}</b><small>${c==="All"?data.length+" song suggestions":data.filter(x=>x[0]===c).length+" song suggestions"}</small>`;b.onclick=()=>{category=c;sub="All";buildCats();buildSubs();render()};categories.append(b)})}
+function buildSubs(){subs.innerHTML="";let names=["All",...new Set(data.filter(x=>category==="All"||x[0]===category).map(x=>x[1]))];names.forEach(s=>{let b=document.createElement("button");b.className="sub"+(sub===s?" active":"");b.textContent=s;b.onclick=()=>{sub=s;buildSubs();render()};subs.append(b)})}
+function render(){let q=document.getElementById("search").value.toLowerCase();let list=data.filter(x=>(category==="All"||x[0]===category)&&(sub==="All"||x[1]===sub)&&x.join(" ").toLowerCase().includes(q));if(document.getElementById("sort").value==="az")list.sort((a,b)=>a[2].localeCompare(b[2]));document.getElementById("resultsTitle").textContent=(category==="All"?"All Categories":category)+" · "+(sub==="All"?"All Types":sub);let root=document.getElementById("songs");root.innerHTML="";if(!list.length){root.innerHTML='<div class="empty">इस filter में song नहीं मिला। दूसरा scene चुनो।</div>';return}list.forEach(x=>{let d=document.createElement("article");d.className="song";d.innerHTML=`<h3>${x[2]}</h3><div class="kind">${x[0]} / ${x[1]}</div><p><b>Artist:</b> ${x[3]}<br><b>Mood:</b> ${x[4]}<br><b>Use for:</b> ${x[5]}</p><div class="actions"><a target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent(x[2]+" "+x[3]+" official song")}">YouTube पर सुनो ↗</a><button data-fav="${x[2]}">${favs.includes(x[2])?"★ Saved":"☆ Favourite"}</button><button data-pick="${x[2]}" data-type="${x[1]}">Select Song</button></div>`;root.append(d)});root.querySelectorAll("[data-fav]").forEach(b=>b.onclick=()=>{let v=b.dataset.fav;favs=favs.includes(v)?favs.filter(y=>y!==v):[...favs,v];localStorage.setItem("ss-favs-v2",JSON.stringify(favs));renderFav();render()});root.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{document.getElementById("chosen").value=b.dataset.pick;document.getElementById("reeltype").value=b.dataset.type;document.getElementById("plan").focus()})}
+function renderFav(){document.getElementById("favourites").textContent=favs.length?favs.join(" • "):"अभी कोई favourite नहीं चुना।"}
+document.getElementById("search").oninput=render;document.getElementById("sort").onchange=render;
+document.getElementById("copy").onclick=async()=>{let t=`Client: ${client.value}\nReel type: ${reeltype.value}\nSong: ${chosen.value}\nShot plan:\n${plan.value}`;try{await navigator.clipboard.writeText(t);msg.textContent="Cue Sheet copy हो गई!";}catch(e){msg.textContent="Copy नहीं हुआ; text select करके copy करो।"}};
+document.getElementById("clear").onclick=()=>{["client","reeltype","chosen","plan"].forEach(id=>document.getElementById(id).value="");msg.textContent="Cue Sheet clear हो गई।"};
+buildCats();buildSubs();render();renderFav();
+</script></body></html>
